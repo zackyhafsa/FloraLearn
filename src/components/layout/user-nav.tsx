@@ -19,8 +19,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { logout } from '@/lib/auth'
-import { getActiveRole, type UserRole } from '@/lib/role'
+import { getSession, logout } from '@/lib/auth'
+import type { UserRole } from '@/lib/auth'
 
 interface UserNavProps {
   currentRole?: UserRole
@@ -58,27 +58,16 @@ export function UserNav({ currentRole = 'student', onRoleChange }: UserNavProps)
   const navigate = useNavigate()
   const location = useLocation()
 
-  const [role, setRole] = React.useState<UserRole>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('flora_active_role') as UserRole
-      if (saved && (saved === 'student' || saved === 'teacher' || saved === 'admin')) {
-        return saved
-      }
-    }
-    return currentRole
-  })
+  const session = getSession()
+  const role = session?.role ?? currentRole
+  const user = roleConfigs[role]
 
-  // Sync role with active route if navigating directly
   React.useEffect(() => {
-    if (location.pathname.startsWith('/teacher')) {
-      setRole('teacher')
-    } else if (location.pathname === '/') {
-      const saved = typeof window !== 'undefined' ? (localStorage.getItem('flora_active_role') as UserRole) : null
-      if (saved === 'student') {
-        setRole('student')
-      }
+    const expectedPath = role === 'student' ? '/' : role === 'teacher' ? '/teacher' : '/admin'
+    if (location.pathname !== expectedPath && !location.pathname.startsWith('/courses')) {
+      navigate({ to: expectedPath })
     }
-  }, [location.pathname])
+  }, [location.pathname, navigate, role])
 
   const [isDarkMode, setIsDarkMode] = React.useState(() => {
     if (typeof window !== 'undefined') {
@@ -86,8 +75,6 @@ export function UserNav({ currentRole = 'student', onRoleChange }: UserNavProps)
     }
     return false
   })
-
-  const user = roleConfigs[role]
 
   const toggleTheme = () => {
     const nextDark = !isDarkMode

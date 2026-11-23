@@ -1,6 +1,7 @@
 import { BookOpen01Icon, Home01Icon, Leaf01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react'
 import { Link, useLocation } from '@tanstack/react-router'
+import { getSession } from '@/lib/auth'
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -27,7 +28,9 @@ export function SidebarNav({ onItemClick }: { onItemClick?: () => void }) {
 }
 
 export function SidebarProfileCard() {
-  return <div className="flex items-center gap-3 rounded-xl border border-border/80 bg-muted/20 p-3"><Avatar size="default"><AvatarFallback className="bg-primary/10 font-bold text-xs text-primary">DP</AvatarFallback></Avatar><div className="min-w-0 flex-1"><p className="truncate text-xs font-semibold text-foreground">Dika Pratama</p><p className="truncate text-[11px] text-muted-foreground">Kelas 10 IPA 1</p></div><Badge variant="secondary" className="shrink-0 text-[10px]">Siswa</Badge></div>
+  const user = getSession()
+  const initials = user?.name.split(' ').map((part) => part[0]).slice(0, 2).join('')
+  return <div className="flex items-center gap-3 rounded-xl border border-border/80 bg-muted/20 p-3"><Avatar size="default"><AvatarFallback className="bg-primary/10 font-bold text-xs text-primary">{initials}</AvatarFallback></Avatar><div className="min-w-0 flex-1"><p className="truncate text-xs font-semibold text-foreground">{user?.name}</p><p className="truncate text-[11px] text-muted-foreground">{user?.role === 'student' ? 'Kelas 10 IPA 1' : user?.role === 'teacher' ? 'Guru Pengampu Biologi' : 'Administrator Sekolah'}</p></div><Badge variant="secondary" className="shrink-0 text-[10px]">{user?.role === 'student' ? 'Siswa' : user?.role === 'teacher' ? 'Guru' : 'Admin'}</Badge></div>
 }
 
 export function AppSidebar() {
