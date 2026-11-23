@@ -2,6 +2,7 @@ import {
   Calendar01Icon,
   CheckmarkCircle02Icon,
   Clock01Icon,
+  PlusSignIcon,
   Task01Icon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
@@ -21,9 +22,13 @@ import type { TeacherAssignment } from '@/types'
 
 interface AssignmentManagementCardProps {
   assignments: TeacherAssignment[]
+  onCreateTask?: () => void
 }
 
-export function AssignmentManagementCard({ assignments }: AssignmentManagementCardProps) {
+export function AssignmentManagementCard({
+  assignments,
+  onCreateTask,
+}: AssignmentManagementCardProps) {
   return (
     <Card className="border-border/80 shadow-xs">
       <CardHeader>
@@ -34,7 +39,12 @@ export function AssignmentManagementCard({ assignments }: AssignmentManagementCa
               {assignments.length} Aktif
             </Badge>
           </div>
-          <Button variant="outline" size="sm" className="text-xs h-8">
+          <Button
+            size="sm"
+            onClick={onCreateTask}
+            className="text-xs h-8 gap-1.5 shadow-xs"
+          >
+            <HugeiconsIcon icon={PlusSignIcon} size={14} data-icon="inline-start" />
             + Buat Tugas Baru
           </Button>
         </div>

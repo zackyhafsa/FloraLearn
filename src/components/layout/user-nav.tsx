@@ -1,13 +1,9 @@
 import * as React from 'react'
 import { useLocation, useNavigate } from '@tanstack/react-router'
 import {
-  CheckmarkCircle02Icon,
   Logout01Icon,
   Moon02Icon,
-  SchoolIcon,
   Sun01Icon,
-  TeacherIcon,
-  UserIcon,
   UserSettings01Icon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
@@ -23,8 +19,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-
-export type UserRole = 'student' | 'teacher' | 'admin'
+import { logout } from '@/lib/auth'
+import { getActiveRole, type UserRole } from '@/lib/role'
 
 interface UserNavProps {
   currentRole?: UserRole
@@ -92,20 +88,6 @@ export function UserNav({ currentRole = 'student', onRoleChange }: UserNavProps)
   })
 
   const user = roleConfigs[role]
-
-  const handleRoleSelect = (newRole: UserRole) => {
-    setRole(newRole)
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('flora_active_role', newRole)
-    }
-    onRoleChange?.(newRole)
-
-    if (newRole === 'teacher') {
-      navigate({ to: '/teacher' as any })
-    } else if (newRole === 'student') {
-      navigate({ to: '/' as any })
-    }
-  }
 
   const toggleTheme = () => {
     const nextDark = !isDarkMode
@@ -175,63 +157,6 @@ export function UserNav({ currentRole = 'student', onRoleChange }: UserNavProps)
 
         <DropdownMenuSeparator />
 
-        {/* Role Switcher Section (Critical for Multi-Role preview) */}
-        <DropdownMenuGroup>
-          <DropdownMenuLabel className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-2 py-1">
-            Ganti Mode Peran (Pratinjau)
-          </DropdownMenuLabel>
-
-          <DropdownMenuItem
-            onClick={() => handleRoleSelect('student')}
-            className="flex items-center justify-between cursor-pointer"
-          >
-            <div className="flex items-center gap-2">
-              <HugeiconsIcon icon={UserIcon} size={16} className="text-primary" />
-              <div className="flex flex-col">
-                <span className="text-xs font-medium">Siswa</span>
-                <span className="text-[10px] text-muted-foreground">Dika Pratama (10 IPA 1)</span>
-              </div>
-            </div>
-            {role === 'student' && (
-              <HugeiconsIcon icon={CheckmarkCircle02Icon} size={15} className="text-primary" />
-            )}
-          </DropdownMenuItem>
-
-          <DropdownMenuItem
-            onClick={() => handleRoleSelect('teacher')}
-            className="flex items-center justify-between cursor-pointer"
-          >
-            <div className="flex items-center gap-2">
-              <HugeiconsIcon icon={TeacherIcon} size={16} className="text-amber-600 dark:text-amber-400" />
-              <div className="flex flex-col">
-                <span className="text-xs font-medium">Guru</span>
-                <span className="text-[10px] text-muted-foreground">Pak Budi (Biologi)</span>
-              </div>
-            </div>
-            {role === 'teacher' && (
-              <HugeiconsIcon icon={CheckmarkCircle02Icon} size={15} className="text-primary" />
-            )}
-          </DropdownMenuItem>
-
-          <DropdownMenuItem
-            onClick={() => handleRoleSelect('admin')}
-            className="flex items-center justify-between cursor-pointer"
-          >
-            <div className="flex items-center gap-2">
-              <HugeiconsIcon icon={SchoolIcon} size={16} className="text-violet-600 dark:text-violet-400" />
-              <div className="flex flex-col">
-                <span className="text-xs font-medium">Admin</span>
-                <span className="text-[10px] text-muted-foreground">Administrator Sekolah</span>
-              </div>
-            </div>
-            {role === 'admin' && (
-              <HugeiconsIcon icon={CheckmarkCircle02Icon} size={15} className="text-primary" />
-            )}
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-
-        <DropdownMenuSeparator />
-
         {/* General Options: Theme Toggle & Settings */}
         <DropdownMenuGroup>
           <DropdownMenuItem onClick={toggleTheme} className="cursor-pointer gap-2">
@@ -257,7 +182,7 @@ export function UserNav({ currentRole = 'student', onRoleChange }: UserNavProps)
         <DropdownMenuSeparator />
 
         {/* Logout */}
-        <DropdownMenuItem variant="destructive" className="cursor-pointer gap-2">
+        <DropdownMenuItem variant="destructive" className="cursor-pointer gap-2" onClick={() => { logout(); window.location.href = '/login' }}>
           <HugeiconsIcon icon={Logout01Icon} size={16} />
           <span className="text-xs">Keluar</span>
         </DropdownMenuItem>

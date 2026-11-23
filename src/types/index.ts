@@ -99,6 +99,30 @@ export interface PopularSpeciesItem {
   percentage: number
 }
 
+export interface TeacherStudentItem {
+  id: string
+  name: string
+  nisn: string
+  className: string
+  observationsCount: number
+  averageScore: number
+  tasksCompleted: number
+  totalTasks: number
+  lastActive: string
+  status: 'Tuntas' | 'Dalam Proses' | 'Perlu Perhatian'
+}
+
+export interface TeacherModuleItem {
+  id: string
+  title: string
+  subject: string
+  chapterCount: number
+  targetClass: string
+  status: 'Terbit' | 'Draf' | 'Arsip'
+  lastUpdated: string
+  learningObjective: string
+}
+
 export interface NavItem {
   label: string
   icon: React.ComponentType<{ className?: string }>
