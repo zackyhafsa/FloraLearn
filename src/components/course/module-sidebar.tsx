@@ -63,7 +63,7 @@ export function ModuleSidebar({
           return (
             <Link
               key={item.id}
-              to="/courses/$courseId/modules/$moduleId"
+              to="/student/courses/$courseId/modules/$moduleId"
               params={{ courseId, moduleId: item.id }}
             >
               {content}

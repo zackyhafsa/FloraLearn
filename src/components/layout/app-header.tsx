@@ -111,10 +111,10 @@ export function AppHeader() {
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background text-foreground flex">
-      <aside className="hidden lg:flex w-72 shrink-0 flex-col justify-between border-r border-border bg-sidebar px-6 py-6">
+      <aside className="fixed inset-y-0 left-0 hidden h-dvh w-72 shrink-0 flex-col justify-between overflow-y-auto border-r border-border bg-sidebar px-6 py-6 lg:flex">
         <AppSidebar />
       </aside>
-      <div className="flex-1 min-w-0 flex flex-col">
+      <div className="flex min-w-0 flex-1 flex-col lg:ml-72">
         <AppHeader />
         <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
       </div>

@@ -11,9 +11,19 @@ export const Route = createRootRoute({
   beforeLoad: ({ location }) => {
     const session = getSession()
     if (location.pathname === '/login' && session) {
-      throw redirect({ to: session.role === 'student' ? '/' : session.role === 'teacher' ? '/teacher' : '/admin' })
+      throw redirect({ to: session.role === 'student' ? '/student' : session.role === 'teacher' ? '/teacher' : '/admin' })
     }
     if (location.pathname !== '/login' && !session) throw redirect({ to: '/login' })
+    if (session && location.pathname !== '/login') {
+      const allowed = session.role === 'student'
+        ? location.pathname.startsWith('/student')
+        : session.role === 'teacher'
+          ? location.pathname.startsWith('/teacher')
+          : location.pathname.startsWith('/admin')
+      if (!allowed) {
+        throw redirect({ to: session.role === 'student' ? '/student' : session.role === 'teacher' ? '/teacher' : '/admin' })
+      }
+    }
   },
   component: RootComponent,
 })

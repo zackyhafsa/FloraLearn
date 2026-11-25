@@ -4,120 +4,123 @@ import {
   Award01Icon,
   BookOpen01Icon,
   CheckmarkCircle02Icon,
-  Clock01Icon,
+  Quiz01Icon,
   Search01Icon,
   SparklesIcon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 
-import { AppShell } from '@/components/layout/app-header'
 import { CourseCard } from '@/components/dashboard/course-card'
 import { StatCard } from '@/components/dashboard/stat-card'
+import { AppShell } from '@/components/layout/app-header'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { getSession } from '@/lib/auth'
+import {
+  COURSES_CHANGE_EVENT,
+  PROGRESS_CHANGE_EVENT,
+  computeCourseCompletion,
+  getPublishedCourses,
+  getStudentProgress,
+  type DemoCourse,
+} from '@/lib/course-store'
 import type { CourseItem } from '@/types'
 
-export const Route = createFileRoute('/courses/')({ component: CoursesPage })
+export const Route = createFileRoute('/student/courses/')({ component: CoursesPage })
 
-const allCoursesData: CourseItem[] = [
-  {
-    id: 'biodiversity',
-    title: 'Keanekaragaman Hayati',
-    subject: 'Biologi Kelas 10',
-    teacher: 'Pak Budi, M.Pd.',
-    description:
-      'Mempelajari keanekaragaman hayati tingkat gen, jenis, dan ekosistem di Indonesia serta upaya pelestarian flora endemik Nusantara.',
-    progress: 72,
-    totalModules: 4,
-    completedModules: 3,
-    remainingTime: '28 menit tersisa',
-    currentTopic: 'Tingkat Keanekaragaman Hayati',
-    lastAccessed: 'Hari ini, 09:15',
-    category: 'active',
-  },
-  {
-    id: 'ecology',
-    title: 'Ekologi & Ekosistem Tropis',
-    subject: 'Biologi Kelas 10',
-    teacher: 'Pak Budi, M.Pd.',
-    description:
-      'Memahami jaring makanan, interaksi simbiosis makhluk hidup, dan siklus biogeokimia di ekosistem hutan hujan tropis.',
-    progress: 38,
-    totalModules: 5,
-    completedModules: 2,
-    remainingTime: '55 menit tersisa',
-    currentTopic: 'Jaring Makanan & Aliran Energi',
-    lastAccessed: 'Kemarin',
-    category: 'active',
-  },
-  {
-    id: 'morphology',
-    title: 'Morfologi & Anatomi Daun',
-    subject: 'Botani Terapan',
-    teacher: 'Bu Sri Rahayu, S.Si.',
-    description:
-      'Eksplorasi susunan jaringan mesofil daun, tipe-tipe stomata, dan adaptasi morfologis tumbuhan xerofit vs hidrofit.',
-    progress: 15,
-    totalModules: 6,
-    completedModules: 1,
-    remainingTime: '1 jam 10 menit tersisa',
-    currentTopic: 'Struktur Mesofil & Trikoma',
-    lastAccessed: '3 hari yang lalu',
-    category: 'active',
-  },
-  {
-    id: 'intro-botany',
-    title: 'Pengantar Dunia Tumbuhan (Plantae)',
-    subject: 'Biologi Dasar',
-    teacher: 'Pak Budi, M.Pd.',
-    description:
-      'Klasifikasi utama regnum Plantae meliputi lumut (Bryophyta), paku (Pteridophyta), dan tumbuhan berbiji (Spermatophyta).',
-    progress: 100,
-    totalModules: 5,
-    completedModules: 5,
-    remainingTime: 'Telah tuntas',
-    currentTopic: 'Evaluasi Akhir Plantae',
-    lastAccessed: '5 Mei 2024',
-    category: 'completed',
-  },
-]
+function mapToCourseItem(studentId: string, course: DemoCourse): CourseItem {
+  const completion = computeCourseCompletion(studentId, course)
+  const progress = getStudentProgress(studentId)[course.id]
+  const nextModule = course.modules.find(
+    (m) => !progress?.completedModuleIds.includes(m.id),
+  )
 
-const subjects = ['Semua Topik', 'Biologi Kelas 10', 'Botani Terapan', 'Biologi Dasar']
+  return {
+    id: course.id,
+    title: course.title,
+    subject: course.subject,
+    teacher: course.teacher,
+    description: course.description,
+    progress: completion.percent,
+    totalModules: completion.total,
+    completedModules: completion.completed,
+    remainingTime:
+      completion.total === 0
+        ? 'Belum ada materi'
+        : completion.percent === 100
+          ? 'Telah tuntas'
+          : `${completion.total - completion.completed} konten tersisa`,
+    currentTopic: nextModule?.title ?? course.modules[0]?.title ?? 'Belum ada materi',
+    lastAccessed: course.updatedAt ?? 'Baru diterbitkan',
+    category: completion.total > 0 && completion.percent === 100 ? 'completed' : 'active',
+  }
+}
 
 function CoursesPage() {
+  const studentId = getSession()?.id ?? 'student-1'
+
+  const [publishedCourses, setPublishedCourses] = React.useState<DemoCourse[]>(() =>
+    getPublishedCourses(),
+  )
+  const [progressTick, setProgressTick] = React.useState(0)
   const [searchQuery, setSearchQuery] = React.useState('')
   const [selectedSubject, setSelectedSubject] = React.useState('Semua Topik')
   const [activeTab, setActiveTab] = React.useState('all')
 
+  React.useEffect(() => {
+    const syncCourses = () => setPublishedCourses(getPublishedCourses())
+    const syncProgress = () => setProgressTick((n) => n + 1)
+    window.addEventListener(COURSES_CHANGE_EVENT, syncCourses)
+    window.addEventListener(PROGRESS_CHANGE_EVENT, syncProgress)
+    return () => {
+      window.removeEventListener(COURSES_CHANGE_EVENT, syncCourses)
+      window.removeEventListener(PROGRESS_CHANGE_EVENT, syncProgress)
+    }
+  }, [])
+
+  const allCoursesData = React.useMemo(
+    () => publishedCourses.map((c) => mapToCourseItem(studentId, c)),
+    [publishedCourses, studentId, progressTick],
+  )
+
+  const subjects = React.useMemo(() => {
+    const unique = Array.from(new Set(allCoursesData.map((c) => c.subject)))
+    return ['Semua Topik', ...unique]
+  }, [allCoursesData])
+
   const filteredCourses = React.useMemo(() => {
     return allCoursesData.filter((course) => {
-      // Category filter
       if (activeTab === 'active' && course.category !== 'active') return false
       if (activeTab === 'completed' && course.category !== 'completed') return false
+      if (selectedSubject !== 'Semua Topik' && course.subject !== selectedSubject) return false
 
-      // Subject filter
-      if (selectedSubject !== 'Semua Topik' && course.subject !== selectedSubject) {
-        return false
-      }
-
-      // Search query
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase()
-        const matchesTitle = course.title.toLowerCase().includes(query)
-        const matchesSubject = course.subject.toLowerCase().includes(query)
-        const matchesTeacher = course.teacher.toLowerCase().includes(query)
-        const matchesDesc = course.description.toLowerCase().includes(query)
-        return matchesTitle || matchesSubject || matchesTeacher || matchesDesc
+        return (
+          course.title.toLowerCase().includes(query) ||
+          course.subject.toLowerCase().includes(query) ||
+          course.teacher.toLowerCase().includes(query) ||
+          course.description.toLowerCase().includes(query)
+        )
       }
 
       return true
     })
-  }, [activeTab, selectedSubject, searchQuery])
+  }, [allCoursesData, activeTab, selectedSubject, searchQuery])
 
   const activeCount = allCoursesData.filter((c) => c.category === 'active').length
   const completedCount = allCoursesData.filter((c) => c.category === 'completed').length
+  const totalModules = allCoursesData.reduce((sum, c) => sum + c.totalModules, 0)
+  const completedModules = allCoursesData.reduce((sum, c) => sum + c.completedModules, 0)
+  const totalQuizzes = publishedCourses.reduce((sum, c) => sum + c.quizzes, 0)
+
+  const allProgress = getStudentProgress(studentId)
+  const completedQuizzes = Object.values(allProgress).reduce(
+    (sum, p) => sum + Object.keys(p.quizAttempts).length,
+    0,
+  )
 
   return (
     <AppShell>
@@ -133,8 +136,8 @@ function CoursesPage() {
               Kursus Saya
             </h1>
             <p className="text-sm text-muted-foreground max-w-2xl leading-relaxed">
-              Jelajahi seluruh materi pembelajaran biologi dan botani. Pantau progres per modul
-              dan lanjutkan sesi belajar aktifmu.
+              Seluruh course yang telah diterbitkan oleh guru tampil di sini. Buka kursus untuk
+              membaca materi PDF dan mengerjakan quiz.
             </p>
           </div>
         </div>
@@ -143,28 +146,28 @@ function CoursesPage() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard
             icon={BookOpen01Icon}
-            label="Total Kursus"
+            label="Total Kursus Terbit"
             value={`${allCoursesData.length} Kursus`}
-            detail={`${activeCount} aktif · ${completedCount} selesai`}
+            detail={`${activeCount} berjalan · ${completedCount} selesai`}
           />
           <StatCard
             icon={CheckmarkCircle02Icon}
-            label="Modul Diselesaikan"
-            value="11 Modul"
-            detail="Dari total 20 modul materi"
+            label="Konten Diselesaikan"
+            value={`${completedModules} Konten`}
+            detail={`Dari total ${totalModules} materi & quiz`}
           />
           <StatCard
-            icon={Clock01Icon}
-            label="Waktu Belajar"
-            value="4.8 Jam"
-            detail="+1.5 jam di minggu ini"
+            icon={Quiz01Icon}
+            label="Quiz Dikerjakan"
+            value={`${completedQuizzes} / ${totalQuizzes}`}
+            detail="Nilai tersimpan otomatis"
             iconClassName="bg-amber-500/10 text-amber-600 dark:text-amber-400"
           />
           <StatCard
             icon={Award01Icon}
-            label="Sertifikat / Capaian"
-            value="1 Lulus"
-            detail="Pengantar Dunia Tumbuhan"
+            label="Kursus Tuntas"
+            value={`${completedCount} Lulus`}
+            detail="Selesaikan seluruh bab & quiz"
             iconClassName="bg-violet-500/10 text-violet-600 dark:text-violet-400"
           />
         </div>
@@ -172,7 +175,6 @@ function CoursesPage() {
         {/* Search & Filters Controls */}
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            {/* Search Input */}
             <div className="relative w-full sm:w-80">
               <HugeiconsIcon
                 icon={Search01Icon}
@@ -187,7 +189,6 @@ function CoursesPage() {
               />
             </div>
 
-            {/* Category Tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-auto">
               <TabsList>
                 <TabsTrigger value="all">Semua ({allCoursesData.length})</TabsTrigger>
@@ -197,7 +198,6 @@ function CoursesPage() {
             </Tabs>
           </div>
 
-          {/* Subject Filter Pills */}
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs text-muted-foreground font-medium mr-1">Topik:</span>
             {subjects.map((sub) => {
@@ -207,10 +207,11 @@ function CoursesPage() {
                   key={sub}
                   type="button"
                   onClick={() => setSelectedSubject(sub)}
-                  className={`text-xs px-3 py-1 rounded-full border transition-colors ${active
+                  className={`text-xs px-3 py-1 rounded-full border transition-colors ${
+                    active
                       ? 'bg-primary text-primary-foreground border-transparent font-medium shadow-xs'
                       : 'bg-muted/40 text-muted-foreground border-border hover:bg-muted hover:text-foreground'
-                    }`}
+                  }`}
                 >
                   {sub}
                 </button>

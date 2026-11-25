@@ -48,7 +48,7 @@ export function ObservationsCard({ observations, onAddClick }: ObservationsCardP
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-base">Observasi Terbaru</CardTitle>
-          <Link to="/" className="text-xs font-medium text-primary hover:underline">
+          <Link to="/student" className="text-xs font-medium text-primary hover:underline">
             Buka Jurnal
           </Link>
         </div>

@@ -22,8 +22,8 @@ interface CourseProgressCardProps {
 export function CourseProgressCard({
   progress,
   courseId,
-  activeModuleId = 'levels',
-  statusNote = 'Sedikit lagi menuju evaluasi akhir bab!',
+  activeModuleId,
+  statusNote = 'Selesaikan seluruh materi dan quiz untuk menuntaskan kursus ini!',
 }: CourseProgressCardProps) {
   return (
     <Card className="border-border shadow-xs">
@@ -40,15 +40,22 @@ export function CourseProgressCard({
         </div>
         <Progress value={progress} className="w-full" />
         <p className="text-xs text-muted-foreground leading-relaxed">{statusNote}</p>
-        <Link
-          to="/courses/$courseId/modules/$moduleId"
-          params={{ courseId, moduleId: activeModuleId }}
-        >
-          <Button className="w-full gap-2">
+        {activeModuleId ? (
+          <Link
+            to="/student/courses/$courseId/modules/$moduleId"
+            params={{ courseId, moduleId: activeModuleId }}
+          >
+            <Button className="w-full gap-2">
+              <HugeiconsIcon icon={PlayCircle02Icon} data-icon="inline-start" />
+              {progress === 100 ? 'Tinjau Ulang Materi' : 'Lanjutkan Belajar'}
+            </Button>
+          </Link>
+        ) : (
+          <Button className="w-full gap-2" disabled>
             <HugeiconsIcon icon={PlayCircle02Icon} data-icon="inline-start" />
-            Lanjutkan Belajar
+            Belum Ada Materi
           </Button>
-        </Link>
+        )}
       </CardContent>
     </Card>
   )

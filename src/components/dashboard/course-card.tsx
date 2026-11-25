@@ -85,7 +85,7 @@ export function CourseCard({ course, completed = false }: CourseCardProps) {
             ? `Diselesaikan pada ${course.lastAccessed}`
             : 'Kurikulum Merdeka · Biologi SMA'}
         </span>
-        <Link to="/courses/$courseId" params={{ courseId: course.id }}>
+        <Link to="/student/courses/$courseId" params={{ courseId: course.id }}>
           <Button variant={completed ? 'outline' : 'default'} size="sm" className="gap-1.5">
             {completed ? 'Tinjau Materi Ulang' : 'Lanjutkan Belajar'}
             <HugeiconsIcon icon={ArrowRight01Icon} data-icon="inline-end" />

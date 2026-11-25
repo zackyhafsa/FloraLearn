@@ -63,10 +63,13 @@ export function UserNav({ currentRole = 'student', onRoleChange }: UserNavProps)
   const user = roleConfigs[role]
 
   React.useEffect(() => {
-    const expectedPath = role === 'student' ? '/' : role === 'teacher' ? '/teacher' : '/admin'
-    if (location.pathname !== expectedPath && !location.pathname.startsWith('/courses')) {
-      navigate({ to: expectedPath })
-    }
+    const expectedPath = role === 'student' ? '/student' : role === 'teacher' ? '/teacher' : '/admin'
+    const allowed = role === 'student'
+      ? location.pathname.startsWith('/student')
+      : role === 'teacher'
+        ? location.pathname.startsWith('/teacher')
+        : location.pathname.startsWith('/admin')
+    if (!allowed) navigate({ to: expectedPath })
   }, [location.pathname, navigate, role])
 
   const [isDarkMode, setIsDarkMode] = React.useState(() => {
