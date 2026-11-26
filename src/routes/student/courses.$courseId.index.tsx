@@ -1,4 +1,3 @@
-import * as React from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { ArrowLeft01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
@@ -9,15 +8,9 @@ import { CourseProgressCard } from '@/components/course/course-progress-card'
 import { ModuleList } from '@/components/course/module-list'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { useCourse, useCourseProgress } from '@/hooks/use-course-store'
 import { getSession } from '@/lib/auth'
-import {
-  COURSES_CHANGE_EVENT,
-  PROGRESS_CHANGE_EVENT,
-  computeCourseCompletion,
-  getCourseById,
-  getCourseProgress,
-  type DemoCourse,
-} from '@/lib/course-store'
+import { computeCourseCompletion } from '@/lib/course-store'
 
 export const Route = createFileRoute('/student/courses/$courseId/')({
   component: CourseDetail,
@@ -27,23 +20,8 @@ function CourseDetail() {
   const { courseId } = Route.useParams()
   const studentId = getSession()?.id ?? 'student-1'
 
-  const [course, setCourse] = React.useState<DemoCourse | undefined>(() => getCourseById(courseId))
-  const [progressState, setProgressState] = React.useState(() =>
-    getCourseProgress(studentId, courseId),
-  )
-
-  React.useEffect(() => {
-    const syncCourse = () => setCourse(getCourseById(courseId))
-    const syncProgress = () => setProgressState(getCourseProgress(studentId, courseId))
-    syncCourse()
-    syncProgress()
-    window.addEventListener(COURSES_CHANGE_EVENT, syncCourse)
-    window.addEventListener(PROGRESS_CHANGE_EVENT, syncProgress)
-    return () => {
-      window.removeEventListener(COURSES_CHANGE_EVENT, syncCourse)
-      window.removeEventListener(PROGRESS_CHANGE_EVENT, syncProgress)
-    }
-  }, [courseId, studentId])
+  const course = useCourse(courseId)
+  const progressState = useCourseProgress(studentId, courseId)
 
   if (!course) {
     return (
@@ -54,9 +32,9 @@ function CourseDetail() {
             <p className="text-xs text-muted-foreground">
               Kursus ini mungkin masih berstatus Draft atau telah dihapus oleh guru.
             </p>
-            <Link to="/student/courses">
-              <Button size="sm">Kembali ke Daftar Kursus</Button>
-            </Link>
+            <Button size="sm" render={<Link to="/student/courses" />}>
+              Kembali ke Daftar Kursus
+            </Button>
           </CardContent>
         </Card>
       </main>
@@ -120,7 +98,7 @@ function CourseDetail() {
 
             <CourseAssignmentCard
               title="Catatan Belajar Siswa"
-              description="Pelajari setiap dokumen PDF dari guru dan kerjakan quiz evaluasi di bagian akhir modul."
+              description="Pelajari setiap dokumen materi dari guru dan kerjakan quiz evaluasi di bagian akhir modul."
               deadline={course.quizzes > 0 ? `${course.quizzes} Quiz Tersedia` : 'Materi Mandiri'}
               urgency="normal"
             />

@@ -8,77 +8,29 @@ import {
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 
-import { CourseCard } from '@/components/dashboard/course-card'
-import { StatCard } from '@/components/dashboard/stat-card'
+import { CourseCard } from '@/components/course/course-card'
 import { AppShell } from '@/components/layout/app-header'
+import { StatCard } from '@/components/shared/stat-card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { usePublishedCourses, useStudentProgress } from '@/hooks/use-course-store'
 import { getSession } from '@/lib/auth'
-import {
-  COURSES_CHANGE_EVENT,
-  PROGRESS_CHANGE_EVENT,
-  computeCourseCompletion,
-  getPublishedCourses,
-  getStudentProgress,
-  type DemoCourse,
-} from '@/lib/course-store'
-import type { CourseItem } from '@/types'
+import { mapCourseToStudentItem } from '@/lib/course-store'
 
 export const Route = createFileRoute('/student/')({ component: StudentDashboard })
-
-function toCourseItem(studentId: string, course: DemoCourse): CourseItem {
-  const completion = computeCourseCompletion(studentId, course)
-  const progress = getStudentProgress(studentId)[course.id]
-  const nextModule = course.modules.find(
-    (m) => !progress?.completedModuleIds.includes(m.id),
-  )
-
-  return {
-    id: course.id,
-    title: course.title,
-    subject: course.subject,
-    teacher: course.teacher,
-    description: course.description,
-    progress: completion.percent,
-    totalModules: completion.total,
-    completedModules: completion.completed,
-    remainingTime:
-      completion.total === 0
-        ? 'Belum ada materi'
-        : completion.percent === 100
-          ? 'Telah tuntas'
-          : `${completion.total - completion.completed} konten tersisa`,
-    currentTopic: nextModule?.title ?? course.modules[0]?.title ?? 'Belum ada materi',
-    lastAccessed: course.updatedAt ?? 'Baru diterbitkan',
-    category: completion.total > 0 && completion.percent === 100 ? 'completed' : 'active',
-  }
-}
 
 function StudentDashboard() {
   const session = getSession()
   const studentId = session?.id ?? 'student-1'
   const firstName = session?.name.split(' ')[0] ?? 'Dika'
 
-  const [publishedCourses, setPublishedCourses] = React.useState<DemoCourse[]>(() =>
-    getPublishedCourses(),
-  )
-  const [progressTick, setProgressTick] = React.useState(0)
-
-  React.useEffect(() => {
-    const syncCourses = () => setPublishedCourses(getPublishedCourses())
-    const syncProgress = () => setProgressTick((n) => n + 1)
-    window.addEventListener(COURSES_CHANGE_EVENT, syncCourses)
-    window.addEventListener(PROGRESS_CHANGE_EVENT, syncProgress)
-    return () => {
-      window.removeEventListener(COURSES_CHANGE_EVENT, syncCourses)
-      window.removeEventListener(PROGRESS_CHANGE_EVENT, syncProgress)
-    }
-  }, [])
+  const publishedCourses = usePublishedCourses()
+  const studentProgress = useStudentProgress(studentId)
 
   const mappedCourses = React.useMemo(
-    () => publishedCourses.map((c) => toCourseItem(studentId, c)),
-    [publishedCourses, studentId, progressTick],
+    () => publishedCourses.map((course) => mapCourseToStudentItem(studentId, course)),
+    [publishedCourses, studentId, studentProgress],
   )
 
   const activeCourses = mappedCourses.filter((c) => c.category === 'active')
@@ -95,7 +47,6 @@ function StudentDashboard() {
   return (
     <AppShell>
       <div className="mx-auto max-w-7xl flex flex-col gap-8">
-        {/* Greeting */}
         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
           <div className="flex flex-col gap-1.5">
             <Badge variant="secondary" className="w-fit gap-1 text-primary">
@@ -106,21 +57,23 @@ function StudentDashboard() {
               Selamat pagi, {firstName}!
             </h1>
             <p className="text-sm text-muted-foreground max-w-2xl leading-relaxed">
-              Pelajari modul PDF dari guru dan kerjakan quiz evaluasi pada setiap kursus aktifmu.
+              Pelajari modul materi dari guru dan kerjakan quiz evaluasi pada setiap kursus aktifmu.
             </p>
           </div>
 
           {primaryCourse && (
-            <Link to="/student/courses/$courseId" params={{ courseId: primaryCourse.id }}>
-              <Button className="gap-2 shadow-xs">
-                <HugeiconsIcon icon={BookOpen01Icon} data-icon="inline-start" />
-                Lanjutkan Belajar
-              </Button>
-            </Link>
+            <Button
+              className="gap-2 shadow-xs"
+              render={
+                <Link to="/student/courses/$courseId" params={{ courseId: primaryCourse.id }} />
+              }
+            >
+              <HugeiconsIcon icon={BookOpen01Icon} data-icon="inline-start" />
+              Lanjutkan Belajar
+            </Button>
           )}
         </div>
 
-        {/* Stats */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <StatCard
             icon={BookOpen01Icon}
@@ -142,7 +95,6 @@ function StudentDashboard() {
           />
         </div>
 
-        {/* Body */}
         <div className="grid grid-cols-1 gap-8 xl:grid-cols-3">
           <div className="flex flex-col gap-6 xl:col-span-2">
             <Tabs defaultValue="in-progress" className="w-full">

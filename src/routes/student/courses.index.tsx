@@ -10,79 +10,31 @@ import {
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 
-import { CourseCard } from '@/components/dashboard/course-card'
-import { StatCard } from '@/components/dashboard/stat-card'
+import { CourseCard } from '@/components/course/course-card'
 import { AppShell } from '@/components/layout/app-header'
+import { StatCard } from '@/components/shared/stat-card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { usePublishedCourses, useStudentProgress } from '@/hooks/use-course-store'
 import { getSession } from '@/lib/auth'
-import {
-  COURSES_CHANGE_EVENT,
-  PROGRESS_CHANGE_EVENT,
-  computeCourseCompletion,
-  getPublishedCourses,
-  getStudentProgress,
-  type DemoCourse,
-} from '@/lib/course-store'
-import type { CourseItem } from '@/types'
+import { mapCourseToStudentItem } from '@/lib/course-store'
 
 export const Route = createFileRoute('/student/courses/')({ component: CoursesPage })
-
-function mapToCourseItem(studentId: string, course: DemoCourse): CourseItem {
-  const completion = computeCourseCompletion(studentId, course)
-  const progress = getStudentProgress(studentId)[course.id]
-  const nextModule = course.modules.find(
-    (m) => !progress?.completedModuleIds.includes(m.id),
-  )
-
-  return {
-    id: course.id,
-    title: course.title,
-    subject: course.subject,
-    teacher: course.teacher,
-    description: course.description,
-    progress: completion.percent,
-    totalModules: completion.total,
-    completedModules: completion.completed,
-    remainingTime:
-      completion.total === 0
-        ? 'Belum ada materi'
-        : completion.percent === 100
-          ? 'Telah tuntas'
-          : `${completion.total - completion.completed} konten tersisa`,
-    currentTopic: nextModule?.title ?? course.modules[0]?.title ?? 'Belum ada materi',
-    lastAccessed: course.updatedAt ?? 'Baru diterbitkan',
-    category: completion.total > 0 && completion.percent === 100 ? 'completed' : 'active',
-  }
-}
 
 function CoursesPage() {
   const studentId = getSession()?.id ?? 'student-1'
 
-  const [publishedCourses, setPublishedCourses] = React.useState<DemoCourse[]>(() =>
-    getPublishedCourses(),
-  )
-  const [progressTick, setProgressTick] = React.useState(0)
+  const publishedCourses = usePublishedCourses()
+  const studentProgress = useStudentProgress(studentId)
   const [searchQuery, setSearchQuery] = React.useState('')
   const [selectedSubject, setSelectedSubject] = React.useState('Semua Topik')
   const [activeTab, setActiveTab] = React.useState('all')
 
-  React.useEffect(() => {
-    const syncCourses = () => setPublishedCourses(getPublishedCourses())
-    const syncProgress = () => setProgressTick((n) => n + 1)
-    window.addEventListener(COURSES_CHANGE_EVENT, syncCourses)
-    window.addEventListener(PROGRESS_CHANGE_EVENT, syncProgress)
-    return () => {
-      window.removeEventListener(COURSES_CHANGE_EVENT, syncCourses)
-      window.removeEventListener(PROGRESS_CHANGE_EVENT, syncProgress)
-    }
-  }, [])
-
   const allCoursesData = React.useMemo(
-    () => publishedCourses.map((c) => mapToCourseItem(studentId, c)),
-    [publishedCourses, studentId, progressTick],
+    () => publishedCourses.map((c) => mapCourseToStudentItem(studentId, c)),
+    [publishedCourses, studentId, studentProgress],
   )
 
   const subjects = React.useMemo(() => {
@@ -115,9 +67,7 @@ function CoursesPage() {
   const totalModules = allCoursesData.reduce((sum, c) => sum + c.totalModules, 0)
   const completedModules = allCoursesData.reduce((sum, c) => sum + c.completedModules, 0)
   const totalQuizzes = publishedCourses.reduce((sum, c) => sum + c.quizzes, 0)
-
-  const allProgress = getStudentProgress(studentId)
-  const completedQuizzes = Object.values(allProgress).reduce(
+  const completedQuizzes = Object.values(studentProgress).reduce(
     (sum, p) => sum + Object.keys(p.quizAttempts).length,
     0,
   )
@@ -125,7 +75,6 @@ function CoursesPage() {
   return (
     <AppShell>
       <div className="mx-auto max-w-7xl flex flex-col gap-8">
-        {/* Header & Page Title */}
         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
           <div className="flex flex-col gap-1.5">
             <Badge variant="secondary" className="w-fit gap-1 text-primary">
@@ -137,12 +86,11 @@ function CoursesPage() {
             </h1>
             <p className="text-sm text-muted-foreground max-w-2xl leading-relaxed">
               Seluruh course yang telah diterbitkan oleh guru tampil di sini. Buka kursus untuk
-              membaca materi PDF dan mengerjakan quiz.
+              membaca materi dan mengerjakan quiz.
             </p>
           </div>
         </div>
 
-        {/* Stats Grid */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard
             icon={BookOpen01Icon}
@@ -172,7 +120,6 @@ function CoursesPage() {
           />
         </div>
 
-        {/* Search & Filters Controls */}
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="relative w-full sm:w-80">
@@ -220,7 +167,6 @@ function CoursesPage() {
           </div>
         </div>
 
-        {/* Course Cards List */}
         {filteredCourses.length > 0 ? (
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             {filteredCourses.map((course) => (

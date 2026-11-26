@@ -1,23 +1,13 @@
 import * as React from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import {
-  ArrowLeft01Icon,
-  Cancel01Icon,
-  CheckmarkCircle02Icon,
-  File01Icon,
-  Pdf01Icon,
-  Quiz01Icon,
-  SaveIcon,
-  Upload01Icon,
-  ViewIcon,
-} from '@hugeicons/core-free-icons'
+import { ArrowLeft01Icon, Pdf01Icon, Quiz01Icon, SaveIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 
-import { PdfDocumentReader } from '@/components/course/pdf-document-reader'
 import { AppShell } from '@/components/layout/app-header'
+import { PdfUploadField } from '@/components/teacher/pdf-upload-field'
 import { createEmptyQuestion, QuizBuilder } from '@/components/teacher/quiz-builder'
 import { Badge } from '@/components/ui/badge'
-import { Button, buttonVariants } from '@/components/ui/button'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import {
@@ -34,12 +24,7 @@ import {
   updateModule,
   type QuizQuestion,
 } from '@/lib/course-store'
-import {
-  MAX_PDF_SIZE_BYTES,
-  deletePdfFile,
-  formatFileSize,
-  savePdfFile,
-} from '@/lib/pdf-store'
+import { deletePdfFile, savePdfFile } from '@/lib/pdf-store'
 
 interface ContentEditorSearch {
   type?: 'material' | 'quiz'
@@ -77,18 +62,13 @@ function NewContentPage() {
   const [content, setContent] = React.useState(existingModule?.content ?? '')
   const [duration, setDuration] = React.useState(existingModule?.duration ?? '15 menit')
 
-  // PDF upload state
   const [selectedPdfFile, setSelectedPdfFile] = React.useState<File | null>(null)
   const [existingPdfId, setExistingPdfId] = React.useState<string | undefined>(
     existingModule?.pdfId,
   )
   const [pdfName, setPdfName] = React.useState(existingModule?.pdfName ?? '')
   const [pdfSize, setPdfSize] = React.useState<number | undefined>(existingModule?.pdfSize)
-  const [showPreview, setShowPreview] = React.useState(false)
-  const [showFullPreview, setShowFullPreview] = React.useState(false)
-  const [fileError, setFileError] = React.useState('')
 
-  // Quiz state
   const [questions, setQuestions] = React.useState<QuizQuestion[]>(
     existingModule?.questions && existingModule.questions.length > 0
       ? existingModule.questions
@@ -96,43 +76,6 @@ function NewContentPage() {
   )
 
   const [saving, setSaving] = React.useState(false)
-  const fileInputRef = React.useRef<HTMLInputElement>(null)
-
-  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
-    setFileError('')
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
-    if (!isPdf) {
-      setFileError('Format file harus berupa PDF (.pdf).')
-      e.target.value = ''
-      return
-    }
-
-    if (file.size > MAX_PDF_SIZE_BYTES) {
-      setFileError(
-        `Ukuran file PDF maksimal 10 MB. File yang Anda pilih berukuran ${formatFileSize(file.size)}.`,
-      )
-      e.target.value = ''
-      return
-    }
-
-    setSelectedPdfFile(file)
-    setPdfName(file.name)
-    setPdfSize(file.size)
-    setShowPreview(true)
-  }
-
-  function clearPdf() {
-    setSelectedPdfFile(null)
-    setExistingPdfId(undefined)
-    setPdfName('')
-    setPdfSize(undefined)
-    setShowPreview(false)
-    setFileError('')
-    if (fileInputRef.current) fileInputRef.current.value = ''
-  }
 
   const quizValid =
     questions.length > 0 &&
@@ -228,7 +171,6 @@ function NewContentPage() {
         </div>
 
         <form onSubmit={save} className="flex flex-col gap-6">
-          {/* Metadata */}
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Informasi Konten</CardTitle>
@@ -283,7 +225,6 @@ function NewContentPage() {
             </CardContent>
           </Card>
 
-          {/* Content specific: PDF + Material OR Quiz Builder */}
           {type === 'material' ? (
             <Card>
               <CardHeader>
@@ -297,141 +238,23 @@ function NewContentPage() {
               </CardHeader>
 
               <CardContent className="flex flex-col gap-5">
-                {/* PDF Upload Dropzone */}
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-medium">
-                    File Materi PDF{' '}
-                    <span className="text-xs text-muted-foreground">
-                      (Maks. 10 MB · Opsional jika isi teks diisi)
-                    </span>
-                  </label>
-
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="application/pdf,.pdf"
-                    onChange={handleFileSelect}
-                    className="hidden"
-                    id="pdf-upload-input"
-                  />
-
-                  {!pdfName ? (
-                    <label
-                      htmlFor="pdf-upload-input"
-                      className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border bg-muted/20 px-6 py-8 text-center transition-colors hover:border-primary/60 hover:bg-primary/5"
-                    >
-                      <div className="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                        <HugeiconsIcon icon={Upload01Icon} size={22} />
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">
-                          Klik untuk memilih file PDF dari komputer Anda
-                        </p>
-                        <p className="mt-0.5 text-xs text-muted-foreground">
-                          Format .pdf · Ukuran maksimal 10 MB
-                        </p>
-                      </div>
-                    </label>
-                  ) : (
-                    <div className="flex flex-col gap-4 rounded-2xl border border-primary/30 bg-primary/5 p-4">
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-                            <HugeiconsIcon icon={File01Icon} size={20} />
-                          </div>
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold text-foreground">
-                              {pdfName}
-                            </p>
-                            <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                              <HugeiconsIcon
-                                icon={CheckmarkCircle02Icon}
-                                size={13}
-                                className="text-primary"
-                              />
-                              Siap disimpan ({formatFileSize(pdfSize)})
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setShowPreview((prev) => !prev)}
-                          >
-                            <HugeiconsIcon icon={ViewIcon} data-icon="inline-start" />
-                            {showPreview ? 'Tutup Preview' : 'Preview Tampilan Siswa'}
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => fileInputRef.current?.click()}
-                          >
-                            Ganti PDF
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon-sm"
-                            className="text-destructive"
-                            onClick={clearPdf}
-                            aria-label="Hapus file PDF"
-                          >
-                            <HugeiconsIcon icon={Cancel01Icon} />
-                          </Button>
-                        </div>
-                      </div>
-
-                      {showPreview && (
-                        <div className="flex flex-col gap-3">
-                          {showFullPreview ? (
-                            <>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                className="self-center"
-                                onClick={() => setShowFullPreview(false)}
-                              >
-                                Tampilkan cuplikan saja
-                              </Button>
-                              <PdfDocumentReader
-                                file={selectedPdfFile}
-                                pdfId={existingPdfId}
-                              />
-                            </>
-                          ) : (
-                            <>
-                              <div className="h-72 overflow-hidden rounded-xl border border-border">
-                                <PdfDocumentReader
-                                  file={selectedPdfFile}
-                                  pdfId={existingPdfId}
-                                  maxPages={1}
-                                />
-                              </div>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                className="self-center"
-                                onClick={() => setShowFullPreview(true)}
-                              >
-                                Lihat PDF selengkapnya
-                              </Button>
-                            </>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {fileError && (
-                    <p className="text-xs font-medium text-destructive" role="alert">
-                      {fileError}
-                    </p>
-                  )}
-                </div>
+                <PdfUploadField
+                  selectedFile={selectedPdfFile}
+                  existingPdfId={existingPdfId}
+                  pdfName={pdfName}
+                  pdfSize={pdfSize}
+                  onSelectFile={(file) => {
+                    setSelectedPdfFile(file)
+                    setPdfName(file.name)
+                    setPdfSize(file.size)
+                  }}
+                  onClear={() => {
+                    setSelectedPdfFile(null)
+                    setExistingPdfId(undefined)
+                    setPdfName('')
+                    setPdfSize(undefined)
+                  }}
+                />
 
                 <Field label="Deskripsi Singkat">
                   <Input
@@ -487,9 +310,9 @@ function NewContentPage() {
             </p>
 
             <div className="flex items-center gap-3">
-              <Link to="/teacher/module" className={buttonVariants({ variant: 'outline' })}>
+              <Button type="button" variant="outline" render={<Link to="/teacher/module" />}>
                 Batal
-              </Link>
+              </Button>
               <Button type="submit" disabled={!valid || saving}>
                 <HugeiconsIcon icon={SaveIcon} data-icon="inline-start" />
                 {saving

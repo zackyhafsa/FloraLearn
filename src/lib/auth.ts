@@ -1,19 +1,17 @@
-export type UserRole = 'student' | 'teacher' | 'admin'
+import { getUsers, type UserRole } from '@/lib/user-store'
+
+export type { UserRole }
 
 export type SessionUser = {
   id: string
   name: string
   email: string
   role: UserRole
+  className?: string
+  subject?: string
 }
 
-const SESSION_KEY = 'flora_session'
-
-const accounts: Array<SessionUser & { password: string }> = [
-  { id: 'student-1', name: 'Dika Pratama', email: 'dika.pratama@siswa.floralearn.id', password: 'floralearn', role: 'student' },
-  { id: 'teacher-1', name: 'Pak Budi Santoso, M.Pd.', email: 'budi.santoso@guru.floralearn.id', password: 'floralearn', role: 'teacher' },
-  { id: 'admin-1', name: 'Admin Kurikulum', email: 'admin@sekolah.floralearn.id', password: 'floralearn', role: 'admin' },
-]
+const SESSION_KEY = 'ekostream_session'
 
 export function getSession(): SessionUser | null {
   if (typeof window === 'undefined') return null
@@ -21,7 +19,12 @@ export function getSession(): SessionUser | null {
   if (!value) return null
   try {
     const session = JSON.parse(value) as Partial<SessionUser>
-    if (!session.id || typeof session.name !== 'string' || typeof session.email !== 'string' || !['student', 'teacher', 'admin'].includes(session.role ?? '')) {
+    if (
+      !session.id ||
+      typeof session.name !== 'string' ||
+      typeof session.email !== 'string' ||
+      !['student', 'teacher', 'admin'].includes(session.role ?? '')
+    ) {
       logout()
       return null
     }
@@ -32,12 +35,33 @@ export function getSession(): SessionUser | null {
   }
 }
 
-export function login(email: string, password: string): SessionUser | null {
-  const account = accounts.find((item) => item.email === email && item.password === password)
-  if (!account) return null
-  const session: SessionUser = { id: account.id, name: account.name, email: account.email, role: account.role }
+export function authenticate(
+  email: string,
+  password: string,
+): { ok: true; user: SessionUser } | { ok: false; error: string } {
+  const normalizedEmail = email.trim().toLowerCase()
+  const account = getUsers().find(
+    (item) => item.email.toLowerCase() === normalizedEmail && item.password === password,
+  )
+
+  if (!account) {
+    return { ok: false, error: 'Email atau kata sandi tidak sesuai.' }
+  }
+
+  if (account.status === 'Nonaktif') {
+    return { ok: false, error: 'Akun Anda sedang dinonaktifkan oleh administrator.' }
+  }
+
+  const session: SessionUser = {
+    id: account.id,
+    name: account.name,
+    email: account.email,
+    role: account.role,
+    className: account.className,
+    subject: account.subject,
+  }
   localStorage.setItem(SESSION_KEY, JSON.stringify(session))
-  return session
+  return { ok: true, user: session }
 }
 
 export function logout() {

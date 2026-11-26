@@ -1,3 +1,5 @@
+import type { CourseItem } from '@/types'
+
 export type QuizQuestion = {
   id: string
   question: string
@@ -62,11 +64,11 @@ export type AddModuleInput = {
   questions?: QuizQuestion[]
 }
 
-const COURSES_KEY = 'flora_courses'
-const PROGRESS_KEY = 'flora_student_progress'
+const COURSES_KEY = 'ekostream_courses'
+const PROGRESS_KEY = 'ekostream_student_progress'
 
-export const COURSES_CHANGE_EVENT = 'flora-courses-change'
-export const PROGRESS_CHANGE_EVENT = 'flora-progress-change'
+export const COURSES_CHANGE_EVENT = 'ekostream-courses-change'
+export const PROGRESS_CHANGE_EVENT = 'ekostream-progress-change'
 
 const seed: DemoCourse[] = [
   {
@@ -272,7 +274,7 @@ export function addModule(courseId: string, input: AddModuleInput): DemoModule |
   const created: DemoModule = {
     id: `mod-${crypto.randomUUID().slice(0, 8)}`,
     ...input,
-    status: course.modules.length === 0 ? 'active' : 'active',
+    status: 'active',
   }
   course.modules.push(created)
   course.updatedAt = 'Baru saja'
@@ -408,4 +410,31 @@ export function computeCourseCompletion(
   const completed = progress.completedModuleIds.filter((id) => validModuleIds.has(id)).length
   const percent = Math.round((completed / total) * 100)
   return { completed, total, percent }
+}
+
+/** Mengonversi data DemoCourse menjadi tampilan kartu CourseItem siswa beserta progresnya. */
+export function mapCourseToStudentItem(studentId: string, course: DemoCourse): CourseItem {
+  const completion = computeCourseCompletion(studentId, course)
+  const progress = getCourseProgress(studentId, course.id)
+  const nextModule = course.modules.find((m) => !progress.completedModuleIds.includes(m.id))
+
+  return {
+    id: course.id,
+    title: course.title,
+    subject: course.subject,
+    teacher: course.teacher,
+    description: course.description,
+    progress: completion.percent,
+    totalModules: completion.total,
+    completedModules: completion.completed,
+    remainingTime:
+      completion.total === 0
+        ? 'Belum ada materi'
+        : completion.percent === 100
+          ? 'Telah tuntas'
+          : `${completion.total - completion.completed} konten tersisa`,
+    currentTopic: nextModule?.title ?? course.modules[0]?.title ?? 'Belum ada materi',
+    lastAccessed: course.updatedAt ?? 'Baru diterbitkan',
+    category: completion.total > 0 && completion.percent === 100 ? 'completed' : 'active',
+  }
 }

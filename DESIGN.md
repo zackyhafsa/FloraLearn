@@ -1,6 +1,6 @@
-# FloraLearn Design System
+# EkoStream Design System
 
-FloraLearn is a botanical learning space for students and teachers. Its interface
+EkoStream is a botanical learning space for students and teachers. Its interface
 should feel calm and practical: the green identity connects learning to plant
 science, while clear hierarchy keeps lessons, course progress, and teaching tools
 easy to scan.

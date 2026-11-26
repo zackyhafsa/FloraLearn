@@ -10,15 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as StudentIndexRouteImport } from './routes/student/index'
-import { Route as TeacherIndexRouteImport } from './routes/teacher.index'
+import { Route as TeacherIndexRouteImport } from './routes/teacher/index'
+import { Route as TeacherUsersRouteImport } from './routes/teacher/users'
 import { Route as StudentCoursesIndexRouteImport } from './routes/student/courses.index'
 import { Route as StudentCoursesCourseIdRouteImport } from './routes/student/courses.$courseId'
-import { Route as TeacherModuleIndexRouteImport } from './routes/teacher.module.index'
+import { Route as TeacherModuleIndexRouteImport } from './routes/teacher/module.index'
 import { Route as StudentCoursesCourseIdIndexRouteImport } from './routes/student/courses.$courseId.index'
 import { Route as StudentCoursesCourseIdModulesModuleIdRouteImport } from './routes/student/courses.$courseId.modules.$moduleId'
-import { Route as TeacherModuleCourseIdContentNewRouteImport } from './routes/teacher.module.$courseId.content.new'
+import { Route as TeacherModuleCourseIdContentNewRouteImport } from './routes/teacher/module.$courseId.content.new'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -30,6 +32,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/admin/users',
+  path: '/admin/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StudentIndexRoute = StudentIndexRouteImport.update({
   id: '/student/',
   path: '/student/',
@@ -38,6 +45,11 @@ const StudentIndexRoute = StudentIndexRouteImport.update({
 const TeacherIndexRoute = TeacherIndexRouteImport.update({
   id: '/teacher/',
   path: '/teacher/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeacherUsersRoute = TeacherUsersRouteImport.update({
+  id: '/teacher/users',
+  path: '/teacher/users',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StudentCoursesIndexRoute = StudentCoursesIndexRouteImport.update({
@@ -76,6 +88,8 @@ const TeacherModuleCourseIdContentNewRoute =
 
 export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
+  '/admin/users': typeof AdminUsersRoute
+  '/teacher/users': typeof TeacherUsersRoute
   '/admin/': typeof AdminIndexRoute
   '/student/': typeof StudentIndexRoute
   '/teacher/': typeof TeacherIndexRoute
@@ -88,6 +102,8 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
+  '/admin/users': typeof AdminUsersRoute
+  '/teacher/users': typeof TeacherUsersRoute
   '/admin': typeof AdminIndexRoute
   '/student': typeof StudentIndexRoute
   '/teacher': typeof TeacherIndexRoute
@@ -100,6 +116,8 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/login': typeof LoginRoute
+  '/admin/users': typeof AdminUsersRoute
+  '/teacher/users': typeof TeacherUsersRoute
   '/admin/': typeof AdminIndexRoute
   '/student/': typeof StudentIndexRoute
   '/teacher/': typeof TeacherIndexRoute
@@ -114,6 +132,8 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/login'
+    | '/admin/users'
+    | '/teacher/users'
     | '/admin/'
     | '/student/'
     | '/teacher/'
@@ -126,6 +146,8 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
+    | '/admin/users'
+    | '/teacher/users'
     | '/admin'
     | '/student'
     | '/teacher'
@@ -137,6 +159,8 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/login'
+    | '/admin/users'
+    | '/teacher/users'
     | '/admin/'
     | '/student/'
     | '/teacher/'
@@ -150,6 +174,8 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
+  AdminUsersRoute: typeof AdminUsersRoute
+  TeacherUsersRoute: typeof TeacherUsersRoute
   AdminIndexRoute: typeof AdminIndexRoute
   StudentIndexRoute: typeof StudentIndexRoute
   TeacherIndexRoute: typeof TeacherIndexRoute
@@ -175,6 +201,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/admin/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/student/': {
       id: '/student/'
       path: '/student'
@@ -187,6 +220,13 @@ declare module '@tanstack/react-router' {
       path: '/teacher'
       fullPath: '/teacher/'
       preLoaderRoute: typeof TeacherIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/teacher/users': {
+      id: '/teacher/users'
+      path: '/teacher/users'
+      fullPath: '/teacher/users'
+      preLoaderRoute: typeof TeacherUsersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/student/courses/': {
@@ -253,6 +293,8 @@ const StudentCoursesCourseIdRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
+  AdminUsersRoute: AdminUsersRoute,
+  TeacherUsersRoute: TeacherUsersRoute,
   AdminIndexRoute: AdminIndexRoute,
   StudentIndexRoute: StudentIndexRoute,
   TeacherIndexRoute: TeacherIndexRoute,

@@ -9,41 +9,27 @@ import {
   Quiz01Icon,
   UserGroupIcon,
 } from '@hugeicons/core-free-icons'
-import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react'
+import { HugeiconsIcon } from '@hugeicons/react'
 
 import { AppShell } from '@/components/layout/app-header'
+import { StatCard } from '@/components/shared/stat-card'
 import { CreateCourseDialog } from '@/components/teacher/create-course-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  COURSES_CHANGE_EVENT,
-  PROGRESS_CHANGE_EVENT,
-  computeCourseCompletion,
-  getCourses,
-  getStudentProgress,
-  type DemoCourse,
-} from '@/lib/course-store'
+import { useCourses, useStudentProgress } from '@/hooks/use-course-store'
+import { useUsers } from '@/hooks/use-user-store'
+import { getSession } from '@/lib/auth'
+import { computeCourseCompletion } from '@/lib/course-store'
 
 export const Route = createFileRoute('/teacher/')({ component: TeacherDashboard })
 
 function TeacherDashboard() {
-  const [courses, setCourses] = React.useState<DemoCourse[]>(() => getCourses())
-  const [studentProgress, setStudentProgress] = React.useState(() =>
-    getStudentProgress('student-1'),
-  )
+  const courses = useCourses()
+  const users = useUsers()
+  const session = getSession()
+  const studentProgress = useStudentProgress('student-1')
   const [createOpen, setCreateOpen] = React.useState(false)
-
-  React.useEffect(() => {
-    const syncCourses = () => setCourses(getCourses())
-    const syncProgress = () => setStudentProgress(getStudentProgress('student-1'))
-    window.addEventListener(COURSES_CHANGE_EVENT, syncCourses)
-    window.addEventListener(PROGRESS_CHANGE_EVENT, syncProgress)
-    return () => {
-      window.removeEventListener(COURSES_CHANGE_EVENT, syncCourses)
-      window.removeEventListener(PROGRESS_CHANGE_EVENT, syncProgress)
-    }
-  }, [])
 
   const publishedCount = courses.filter((c) => c.status === 'Terbit').length
   const totalMaterials = courses.reduce(
@@ -68,17 +54,21 @@ function TeacherDashboard() {
               Portal Guru
             </Badge>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-              Selamat datang, Pak Budi
+              Selamat datang, {session?.name ?? 'Guru'}
             </h1>
             <p className="mt-1.5 text-sm text-muted-foreground">
               Kelola course, materi PDF, dan quiz evaluasi yang otomatis tersinkron ke panel siswa.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Link to="/teacher/module" className={buttonVariants({ variant: 'outline' })}>
+            <Link to="/teacher/users" className={buttonVariants({ variant: 'outline' })}>
+              <HugeiconsIcon icon={UserGroupIcon} data-icon="inline-start" />
+              Kelola Siswa ({users.filter((user) => user.role === 'student').length})
+            </Link>
+            <Button variant="outline" render={<Link to="/teacher/module" />}>
               <HugeiconsIcon icon={BookOpen01Icon} data-icon="inline-start" />
               Kelola Modul Ajar
-            </Link>
+            </Button>
             <Button onClick={() => setCreateOpen(true)}>
               <HugeiconsIcon icon={Add01Icon} data-icon="inline-start" />
               Buat Course Baru
@@ -87,25 +77,25 @@ function TeacherDashboard() {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <Stat
+          <StatCard
             icon={BookOpen01Icon}
             label="Course Dikelola"
             value={`${courses.length}`}
             detail={`${publishedCount} terbit · ${courses.length - publishedCount} draft`}
           />
-          <Stat
+          <StatCard
             icon={File01Icon}
             label="Total Materi Ajar"
             value={`${totalMaterials}`}
             detail="Mendukung lampiran PDF & ringkasan"
           />
-          <Stat
+          <StatCard
             icon={Quiz01Icon}
             label="Total Quiz Evaluasi"
             value={`${totalQuizzes}`}
             detail="Pilihan ganda dengan skor otomatis"
           />
-          <Stat
+          <StatCard
             icon={UserGroupIcon}
             label="Quiz Dikerjakan Siswa"
             value={`${recentQuizAttempts.length}`}
@@ -164,13 +154,18 @@ function TeacherDashboard() {
                           </span>
                         </div>
                       </div>
-                      <Link
-                        to="/teacher/module/$courseId/content/new"
-                        params={{ courseId: course.id }}
-                        className={buttonVariants({ size: 'sm', variant: 'outline' })}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        render={
+                          <Link
+                            to="/teacher/module/$courseId/content/new"
+                            params={{ courseId: course.id }}
+                          />
+                        }
                       >
                         + Tambah Konten
-                      </Link>
+                      </Button>
                     </CardContent>
                   </Card>
                 )
@@ -221,32 +216,5 @@ function TeacherDashboard() {
         <CreateCourseDialog open={createOpen} onOpenChange={setCreateOpen} />
       </div>
     </AppShell>
-  )
-}
-
-function Stat({
-  icon,
-  label,
-  value,
-  detail,
-}: {
-  icon: IconSvgElement
-  label: string
-  value: string
-  detail: string
-}) {
-  return (
-    <Card className="shadow-xs">
-      <CardContent className="flex items-center gap-4 p-5">
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-          <HugeiconsIcon icon={icon} />
-        </div>
-        <div>
-          <p className="text-sm text-muted-foreground">{label}</p>
-          <p className="text-2xl font-bold">{value}</p>
-          <p className="text-xs text-muted-foreground">{detail}</p>
-        </div>
-      </CardContent>
-    </Card>
   )
 }

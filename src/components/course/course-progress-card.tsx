@@ -41,15 +41,18 @@ export function CourseProgressCard({
         <Progress value={progress} className="w-full" />
         <p className="text-xs text-muted-foreground leading-relaxed">{statusNote}</p>
         {activeModuleId ? (
-          <Link
-            to="/student/courses/$courseId/modules/$moduleId"
-            params={{ courseId, moduleId: activeModuleId }}
+          <Button
+            className="w-full gap-2"
+            render={
+              <Link
+                to="/student/courses/$courseId/modules/$moduleId"
+                params={{ courseId, moduleId: activeModuleId }}
+              />
+            }
           >
-            <Button className="w-full gap-2">
-              <HugeiconsIcon icon={PlayCircle02Icon} data-icon="inline-start" />
-              {progress === 100 ? 'Tinjau Ulang Materi' : 'Lanjutkan Belajar'}
-            </Button>
-          </Link>
+            <HugeiconsIcon icon={PlayCircle02Icon} data-icon="inline-start" />
+            {progress === 100 ? 'Tinjau Ulang Materi' : 'Lanjutkan Belajar'}
+          </Button>
         ) : (
           <Button className="w-full gap-2" disabled>
             <HugeiconsIcon icon={PlayCircle02Icon} data-icon="inline-start" />

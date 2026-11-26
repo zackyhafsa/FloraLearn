@@ -10,19 +10,18 @@ import {
   Quiz01Icon,
   UserGroupIcon,
 } from '@hugeicons/core-free-icons'
-import { HugeiconsIcon } from '@hugeicons/react'
+import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react'
 
 import { AppShell } from '@/components/layout/app-header'
 import { CreateCourseDialog } from '@/components/teacher/create-course-dialog'
 import { Badge } from '@/components/ui/badge'
-import { Button, buttonVariants } from '@/components/ui/button'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { useCourses } from '@/hooks/use-course-store'
 import {
-  COURSES_CHANGE_EVENT,
   deleteCourse,
   deleteModule,
-  getCourses,
   updateCourse,
   type DemoCourse,
   type DemoModule,
@@ -32,15 +31,9 @@ import { deletePdfFile } from '@/lib/pdf-store'
 export const Route = createFileRoute('/teacher/module/')({ component: ModuleManagement })
 
 function ModuleManagement() {
-  const [courses, setCourses] = React.useState<DemoCourse[]>(() => getCourses())
+  const courses = useCourses()
   const [query, setQuery] = React.useState('')
   const [createCourseOpen, setCreateCourseOpen] = React.useState(false)
-
-  React.useEffect(() => {
-    const sync = () => setCourses(getCourses())
-    window.addEventListener(COURSES_CHANGE_EVENT, sync)
-    return () => window.removeEventListener(COURSES_CHANGE_EVENT, sync)
-  }, [])
 
   const filtered = courses.filter(
     (item) =>
@@ -188,14 +181,12 @@ function CourseCard({
       </CardHeader>
 
       <CardContent className="flex flex-1 flex-col gap-4">
-        {/* Metrics */}
         <div className="grid grid-cols-3 divide-x rounded-xl border border-border py-2.5">
           <Metric icon={File01Icon} value={materialCount} label="Materi" />
           <Metric icon={Quiz01Icon} value={quizCount} label="Quiz" />
           <Metric icon={UserGroupIcon} value={course.students} label="Siswa" />
         </div>
 
-        {/* Module & Quiz contents list */}
         <div className="flex flex-col gap-2">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             Daftar Isi Modul ({course.modules.length})
@@ -213,7 +204,9 @@ function CourseCard({
                     <div className="flex items-center gap-2.5 min-w-0">
                       <span
                         className={`flex size-7 shrink-0 items-center justify-center rounded-lg ${
-                          isQuiz ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400' : 'bg-primary/10 text-primary'
+                          isQuiz
+                            ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                            : 'bg-primary/10 text-primary'
                         }`}
                       >
                         <HugeiconsIcon
@@ -247,15 +240,20 @@ function CourseCard({
                     </div>
 
                     <div className="flex items-center gap-1 shrink-0">
-                      <Link
-                        to="/teacher/module/$courseId/content/new"
-                        params={{ courseId: course.id }}
-                        search={{ editId: mod.id }}
-                        className={buttonVariants({ size: 'icon-sm', variant: 'ghost' })}
+                      <Button
+                        size="icon-sm"
+                        variant="ghost"
+                        render={
+                          <Link
+                            to="/teacher/module/$courseId/content/new"
+                            params={{ courseId: course.id }}
+                            search={{ editId: mod.id }}
+                          />
+                        }
                         aria-label={`Edit ${mod.title}`}
                       >
                         <HugeiconsIcon icon={Edit02Icon} size={14} />
-                      </Link>
+                      </Button>
                       <Button
                         size="icon-sm"
                         variant="ghost"
@@ -279,24 +277,35 @@ function CourseCard({
       </CardContent>
 
       <CardFooter className="gap-2 border-t border-border/60 pt-4">
-        <Link
-          to="/teacher/module/$courseId/content/new"
-          params={{ courseId: course.id }}
-          search={{ type: 'material' }}
-          className={buttonVariants({ className: 'flex-1', size: 'sm' })}
+        <Button
+          className="flex-1"
+          size="sm"
+          render={
+            <Link
+              to="/teacher/module/$courseId/content/new"
+              params={{ courseId: course.id }}
+              search={{ type: 'material' }}
+            />
+          }
         >
           <HugeiconsIcon icon={Add01Icon} data-icon="inline-start" />
           Tambah Materi PDF
-        </Link>
-        <Link
-          to="/teacher/module/$courseId/content/new"
-          params={{ courseId: course.id }}
-          search={{ type: 'quiz' }}
-          className={buttonVariants({ className: 'flex-1', size: 'sm', variant: 'outline' })}
+        </Button>
+        <Button
+          variant="outline"
+          className="flex-1"
+          size="sm"
+          render={
+            <Link
+              to="/teacher/module/$courseId/content/new"
+              params={{ courseId: course.id }}
+              search={{ type: 'quiz' }}
+            />
+          }
         >
           <HugeiconsIcon icon={Quiz01Icon} data-icon="inline-start" />
           Tambah Quiz
-        </Link>
+        </Button>
       </CardFooter>
     </Card>
   )
@@ -307,7 +316,7 @@ function Metric({
   value,
   label,
 }: {
-  icon: typeof BookOpen01Icon
+  icon: IconSvgElement
   value: number
   label: string
 }) {

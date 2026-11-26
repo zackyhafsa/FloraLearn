@@ -1,4 +1,4 @@
-const DB_NAME = 'floralearn_pdf_db'
+const DB_NAME = 'ekostream_pdf_db'
 const DB_VERSION = 1
 const STORE_NAME = 'pdfs'
 

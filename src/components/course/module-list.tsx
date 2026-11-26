@@ -143,25 +143,26 @@ function ModuleRow({
         )}
 
         {!locked ? (
-          <Link
-            to="/student/courses/$courseId/modules/$moduleId"
-            params={{ courseId, moduleId: module.id }}
+          <Button
+            size="sm"
+            variant={module.status === 'done' ? 'outline' : 'default'}
+            className="gap-1.5 shadow-xs"
+            render={
+              <Link
+                to="/student/courses/$courseId/modules/$moduleId"
+                params={{ courseId, moduleId: module.id }}
+              />
+            }
           >
-            <Button
-              size="sm"
-              variant={module.status === 'done' ? 'outline' : 'default'}
-              className="gap-1.5 shadow-xs"
-            >
-              <HugeiconsIcon icon={PlayCircle02Icon} data-icon="inline-start" />
-              {isQuiz
-                ? module.status === 'done'
-                  ? 'Lihat Hasil'
-                  : 'Kerjakan Quiz'
-                : module.status === 'done'
-                  ? 'Baca Ulang'
-                  : 'Buka'}
-            </Button>
-          </Link>
+            <HugeiconsIcon icon={PlayCircle02Icon} data-icon="inline-start" />
+            {isQuiz
+              ? module.status === 'done'
+                ? 'Lihat Hasil'
+                : 'Kerjakan Quiz'
+              : module.status === 'done'
+                ? 'Baca Ulang'
+                : 'Buka'}
+          </Button>
         ) : (
           <Badge variant="outline" className="text-xs text-muted-foreground">
             Terkunci
