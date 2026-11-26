@@ -14,7 +14,7 @@ import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react'
 import { AppShell } from '@/components/layout/app-header'
 import { CreateCourseDialog } from '@/components/teacher/create-course-dialog'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   COURSES_CHANGE_EVENT,
@@ -75,10 +75,10 @@ function TeacherDashboard() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Button variant="outline" render={<Link to="/teacher/module" />}>
+            <Link to="/teacher/module" className={buttonVariants({ variant: 'outline' })}>
               <HugeiconsIcon icon={BookOpen01Icon} data-icon="inline-start" />
               Kelola Modul Ajar
-            </Button>
+            </Link>
             <Button onClick={() => setCreateOpen(true)}>
               <HugeiconsIcon icon={Add01Icon} data-icon="inline-start" />
               Buat Course Baru
@@ -164,18 +164,13 @@ function TeacherDashboard() {
                           </span>
                         </div>
                       </div>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        render={
-                          <Link
-                            to="/teacher/module/$courseId/content/new"
-                            params={{ courseId: course.id }}
-                          />
-                        }
+                      <Link
+                        to="/teacher/module/$courseId/content/new"
+                        params={{ courseId: course.id }}
+                        className={buttonVariants({ size: 'sm', variant: 'outline' })}
                       >
                         + Tambah Konten
-                      </Button>
+                      </Link>
                     </CardContent>
                   </Card>
                 )

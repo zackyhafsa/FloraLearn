@@ -26,8 +26,8 @@ const teacherItems: NavItem[] = [
 function AppBrand() {
   return (
     <div className="flex items-center gap-2.5 px-2">
-      <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-xs">
-        <HugeiconsIcon icon={Leaf01Icon} size={20} />
+      {/* <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-xs">
+        <img src="/images/Logo.png" alt="logo" />
       </span>
       <div className="flex flex-col">
         <span className="text-lg font-bold tracking-tight text-foreground leading-none">
@@ -36,6 +36,12 @@ function AppBrand() {
         <span className="mt-0.5 text-[11px] text-muted-foreground">
           Portal Pembelajaran Botani
         </span>
+      </div> */}
+      <div className='flex w-full justify-between items-center '>
+        <img src="/images/logo.webp" alt="logo" className="h-8 w-8" />
+        <div>
+          <img src="/images/logo-title.webp" alt="logo" width={175} height={32} />
+        </div>
       </div>
     </div>
   )
@@ -68,11 +74,10 @@ export function SidebarNav({ onItemClick }: { onItemClick?: () => void }) {
               key={item.label}
               to={item.to}
               onClick={onItemClick}
-              className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
-                active
-                  ? 'bg-secondary font-semibold text-secondary-foreground shadow-2xs'
-                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-              }`}
+              className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${active
+                ? 'bg-secondary font-semibold text-secondary-foreground shadow-2xs'
+                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                }`}
             >
               <HugeiconsIcon icon={item.icon} size={18} />
               <span>{item.label}</span>

@@ -9,7 +9,7 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { Link } from '@tanstack/react-router'
 
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { buttonVariants } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -108,10 +108,15 @@ export function XpLevelCard({
               ))}
             </div>
 
-            <Link to="/achievements">
-              <Button variant="ghost" size="sm" className="text-xs text-primary ml-1 h-8">
-                Lihat Semua
-              </Button>
+            <Link
+              to="/achievements"
+              className={buttonVariants({
+                variant: 'ghost',
+                size: 'sm',
+                className: 'text-xs text-primary ml-1 h-8',
+              })}
+            >
+              Lihat Semua
             </Link>
           </div>
         </div>

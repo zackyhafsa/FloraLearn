@@ -15,7 +15,7 @@ import { HugeiconsIcon } from '@hugeicons/react'
 import { AppShell } from '@/components/layout/app-header'
 import { CreateCourseDialog } from '@/components/teacher/create-course-dialog'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import {
@@ -247,20 +247,15 @@ function CourseCard({
                     </div>
 
                     <div className="flex items-center gap-1 shrink-0">
-                      <Button
-                        size="icon-sm"
-                        variant="ghost"
-                        render={
-                          <Link
-                            to="/teacher/module/$courseId/content/new"
-                            params={{ courseId: course.id }}
-                            search={{ editId: mod.id }}
-                          />
-                        }
+                      <Link
+                        to="/teacher/module/$courseId/content/new"
+                        params={{ courseId: course.id }}
+                        search={{ editId: mod.id }}
+                        className={buttonVariants({ size: 'icon-sm', variant: 'ghost' })}
                         aria-label={`Edit ${mod.title}`}
                       >
                         <HugeiconsIcon icon={Edit02Icon} size={14} />
-                      </Button>
+                      </Link>
                       <Button
                         size="icon-sm"
                         variant="ghost"
@@ -284,35 +279,24 @@ function CourseCard({
       </CardContent>
 
       <CardFooter className="gap-2 border-t border-border/60 pt-4">
-        <Button
-          className="flex-1"
-          size="sm"
-          render={
-            <Link
-              to="/teacher/module/$courseId/content/new"
-              params={{ courseId: course.id }}
-              search={{ type: 'material' }}
-            />
-          }
+        <Link
+          to="/teacher/module/$courseId/content/new"
+          params={{ courseId: course.id }}
+          search={{ type: 'material' }}
+          className={buttonVariants({ className: 'flex-1', size: 'sm' })}
         >
           <HugeiconsIcon icon={Add01Icon} data-icon="inline-start" />
           Tambah Materi PDF
-        </Button>
-        <Button
-          variant="outline"
-          className="flex-1"
-          size="sm"
-          render={
-            <Link
-              to="/teacher/module/$courseId/content/new"
-              params={{ courseId: course.id }}
-              search={{ type: 'quiz' }}
-            />
-          }
+        </Link>
+        <Link
+          to="/teacher/module/$courseId/content/new"
+          params={{ courseId: course.id }}
+          search={{ type: 'quiz' }}
+          className={buttonVariants({ className: 'flex-1', size: 'sm', variant: 'outline' })}
         >
           <HugeiconsIcon icon={Quiz01Icon} data-icon="inline-start" />
           Tambah Quiz
-        </Button>
+        </Link>
       </CardFooter>
     </Card>
   )

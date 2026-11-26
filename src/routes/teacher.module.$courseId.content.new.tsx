@@ -17,7 +17,7 @@ import { PdfDocumentReader } from '@/components/course/pdf-document-reader'
 import { AppShell } from '@/components/layout/app-header'
 import { createEmptyQuestion, QuizBuilder } from '@/components/teacher/quiz-builder'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import {
@@ -487,9 +487,9 @@ function NewContentPage() {
             </p>
 
             <div className="flex items-center gap-3">
-              <Button type="button" variant="outline" render={<Link to="/teacher/module" />}>
+              <Link to="/teacher/module" className={buttonVariants({ variant: 'outline' })}>
                 Batal
-              </Button>
+              </Link>
               <Button type="submit" disabled={!valid || saving}>
                 <HugeiconsIcon icon={SaveIcon} data-icon="inline-start" />
                 {saving
